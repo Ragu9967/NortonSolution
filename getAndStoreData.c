@@ -10,7 +10,7 @@ void getArbitraryDataAndStore()
 	// to store the data
     char *fileName = "data.txt";
 
-    printf("\Give your Input ! \n");
+    printf("\nGive your Input ! \n");
 
     if(pStr != NULL)
     {
