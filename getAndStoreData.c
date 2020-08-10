@@ -1,18 +1,43 @@
 #include <stdio.h>
+
 void getArbitraryDataAndStore()
 {
-    FILE * fp;
-    char c;
-    printf("Go on, Give your input ... \n");
-	
-	// creating and inserting data into the file named "data.txt". Next time when we give input the data get appended to the file
-    fp = fopen("data.txt", "a+");
-
-    while ((c = getchar()) != EOF && (c != '\n')) {
-        putc(c, fp);
-    }
+	unsigned int len_max = 128;
+    unsigned int current_size = 0;    
+    char *pStr = malloc(len_max);
+    current_size = len_max;
     
-    fclose(fp);
+	// to store the data
+    char *fileName = "data.txt";
+
+    printf("\Give your Input ! \n");
+
+    if(pStr != NULL)
+    {
+    	// accept the user input till the end of line
+		int c = EOF;
+		unsigned int i =0;
+		while (( c = getchar() ) != '\n' && c != EOF)
+		{
+			pStr[i++]=(char)c;
+			if(i == current_size)
+			{
+	            current_size = i+len_max;
+				pStr = realloc(pStr, current_size);
+			}
+		}
+	
+		pStr[i] = '\0';
+		
+		// append the data to the file
+		FILE *filePtr = fopen(fileName, "a+");
+		fputs(pStr, filePtr);
+		fclose(filePtr);
+		
+		//free the char pointer 
+		free(pStr);
+		pStr = NULL;
+    }	    
 }
 int main()
 {
