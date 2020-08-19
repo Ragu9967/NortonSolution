@@ -1,105 +1,83 @@
 #include <stdio.h>
-#include <stdbool.h>
 #include <signal.h>
-#define LEN_MAX 128
-#define CHAR_MAX 100000
+#include <stdlib.h>
+#include <stdbool.h>
+#include <unistd.h>
+#define BUF_LENGTH 1024
 
-//Global variables
-unsigned int len_max;
-unsigned int current_size;
-char *pStr;
-// to store the data
-char *fileName = "data.txt";
+//Input buffer to get the data
+wchar_t *inputBuffer;
 
-//Flag to check if EOF is called
-bool check=false;
+//File name provided to store the data
+char *fileName = "Data";
 
-//once you press ctrl+d exit HANDLER gets called 
-void exitHandler(int sig)
+// display terminate condition
+void displayInstructions()
 {
-    char  cc;
-    signal(sig, SIG_IGN);
-	check = true;
-	printf("\nDo you really want to quit? [y/n] ");
-    cc = getchar();
+    fputs("\nPress ctrl+d to terminate.\nEnter your input : \n",stdout);
 }
 
-//initialize the global variables
+//Initialized the buffer
 void init()
 {
-	len_max = LEN_MAX;
-    current_size = 0;
-    pStr = malloc(len_max);
-    current_size = len_max;
+    inputBuffer = malloc(BUF_LENGTH);
 }
 
-// function to get the user data and store	
+//Stores the data
+void dumpData()
+{
+    FILE *filePtr = fopen(fileName, "ab+");
+
+    //fputws(L"\nCheck : ", stdout);
+    //fputws(inputBuffer, stdout);
+    //fwrite(str, sizeof(wchar_t), wcslen(str), filePtr);
+    if(fputws(inputBuffer, filePtr) < 0)
+    {
+        printf("\nWrite operation is not successful. Check if your disk space ran out ! \n");
+        fclose(filePtr);
+        exit(0);
+    }
+    fclose(filePtr);
+}
+
+//function to read the data from stdin
 void getArbitraryDataAndStore()
 {
-	printf("\n[CRTL-D to exit]\nType something : \n");
-
-    if(pStr != NULL)
+    /*
+    1. reads n(n = BUF_LENGTH) characters from stdin with the inputBuffer.
+    2. dumps the data in the file
+    3. read next n characters and the steps continues
+    */
+    while(fgetws(inputBuffer, BUF_LENGTH, stdin))
     {
-    	int c = EOF;
-		unsigned int i =0;
-		
-	    //accept user input character by character
-		while (c = getchar())
-		{
-			if(check == true)
-			{
-				if( c == 'y')
-					exit(0);	// terminates the program
-				else
-				{
-					check = false;
-					signal(SIGINT, exitHandler);	//if user wishes to continue
-					continue;
-				}
-			}
-			
-			if(c == EOF)
-			{
-				free(pStr);
-				//pStr = NULL;			
-				init();
-				i = 0;
-			}
-			else
-			{
-				pStr[i++]=(char)c;
-				//if i reached maximize size then realloc size
-				if(i == current_size)
-				{
-	                current_size = i+len_max;
-					pStr = realloc(pStr, current_size);
-				}
-				
-				if(c == '\n' || i == CHAR_MAX ) {
-					pStr[i] = '\0';
-					//writes the data
-					FILE *filePtr = fopen(fileName, "a+");
-					fputs(pStr, filePtr);
-					fclose(filePtr);
-					free(pStr);
-					init();
-					i = 0;
-				}
-			}
-		}
-	}
+        dumpData();
+    }
+
+    // checks if reading input from stdin is successful
+    if(ferror(stdin))
+    {
+        free(inputBuffer);
+        perror("read from stdin failed");
+        exit(3);
+    }
 }
 
+int main(){
 
-int main()
-{	
+    // display terminate condition
+    displayInstructions();
 
-	// Register signal and signal handler
-	signal(SIGINT, exitHandler);
-	init();
+    // initialize
+    init();
+
+    // get the data from stdin
     getArbitraryDataAndStore();
-	return 0;
-}
-/*
 
-*/
+    // invokes once EOF is reached. ie when ctrl+d is pressed
+    if(feof(stdin))
+    {
+      	puts("\nEOF detected - Terminated\n");
+    }
+
+    return 0;
+}
