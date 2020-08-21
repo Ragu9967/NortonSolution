@@ -14,13 +14,14 @@ char *fileName = "Data";
 // display terminate condition
 void displayInstructions()
 {
-    fputs("\nPress ctrl+d to terminate.\nEnter your input : \n",stdout);
+    fputs("\nPress ctrl+c to terminate.\nEnter your input : \n",stdout);
 }
 
 //Initialized the buffer
 void init()
 {
     inputBuffer = malloc(BUF_LENGTH);
+
 }
 
 //Stores the data
@@ -30,9 +31,9 @@ void dumpData()
 
     //fputws(L"\nCheck : ", stdout);
     //fputws(inputBuffer, stdout);
-    //fwrite(str, sizeof(wchar_t), wcslen(str), filePtr);
-    if(fputws(inputBuffer, filePtr) < 0)
-    {
+    //if(fputws(inputBuffer, filePtr) < 0)
+    if(fwrite(inputBuffer, 1, BUF_LENGTH, filePtr) < 0)
+	{
         printf("\nWrite operation is not successful. Check if your disk space ran out ! \n");
         fclose(filePtr);
         exit(0);
@@ -48,9 +49,11 @@ void getArbitraryDataAndStore()
     2. dumps the data in the file
     3. read next n characters and the steps continues
     */
-    while(fgetws(inputBuffer, BUF_LENGTH, stdin))
+    //while(fgetws(inputBuffer, BUF_LENGTH, stdin))
+    while(fread(inputBuffer, 1, BUF_LENGTH, stdin))
     {
         dumpData();
+        //free(inputBuffer);
     }
 
     // checks if reading input from stdin is successful
