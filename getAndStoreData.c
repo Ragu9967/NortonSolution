@@ -5,24 +5,24 @@
 #include <unistd.h>
 #define BUF_LENGTH 1024
 
+//File name provided to store the data
+#define fileName "DATA"
+
 //Input buffer to get the data
 wchar_t *inputBuffer;
-
-//File name provided to store the data
-char *fileName = "Data";
 
 // display terminate condition
 void displayInstructions()
 {
-    fputs("\nPress ctrl+c to terminate the input operation. enter exit to exit the application\n",stdout);
+    printf("\nPress ctrl+c to terminate the input operation. enter exit to exit the application\n");
 }
 
 //Initialized the buffer
 void init()
 {
     inputBuffer = malloc(BUF_LENGTH);
-
 }
+
 //Clears the outfile before each input
 void flushOutputFile()
 {
@@ -47,69 +47,33 @@ void dumpData()
     fclose(filePtr);
 }
 
-//function to read the data from stdin
-void getArbitraryDataAndStore()
+/*
+    this function gets a FILE * as a argument which instructs whether to read the data from stdin or from a file
+    You can pass a normal txt file / unicode txt file / img file as a input.
+    Provide a valid filename. If the file exists then the data is read and stored in the OUTPUT file as bin.
+    Then you can open the bin file via right application to view the data stored.
+*/
+void getArbitraryDataAndStore(FILE *readMode)
 {
     flushOutputFile();
-    puts("Give your console input : ");
     /*
     1. reads n(n = BUF_LENGTH) characters from stdin with the inputBuffer.
     2. dumps the data in the file
     3. read next n characters and the steps continues
     */
-    //while(fgetws(inputBuffer, BUF_LENGTH, stdin))
-    while(fread(inputBuffer, 1, BUF_LENGTH, stdin))
+    while(fread(inputBuffer, 1, BUF_LENGTH, readMode))
     {
         dumpData();
         //free(inputBuffer);
     }
-
     // checks if reading input from stdin is successful
-    if(ferror(stdin))
+    if(ferror(readMode))
     {
         free(inputBuffer);
         perror("\nread from stdin failed\n");
         exit(3);
     }
-    puts("\n[Data written successfully]\n");
-}
-
-/*
-    You can pass a normal txt file / unicode txt file / img file as a input.
-    Provide a valid filename. If the file exists then the data is read and stored in the OUTPUT file as bin.
-    Then you can open the bin file via right application to view the data stored.
-*/
-void getFileInput()
-{
-    flushOutputFile();
-    char IfileName[100];
-    printf("\nProvide a valid fileName : ");
-    scanf("%s",IfileName);
-    if( access( IfileName, F_OK ) != -1 )
-    {
-        FILE *filePtr = fopen(IfileName, "rb");
-        int n;
-        while(n = (fread(inputBuffer, 1, BUF_LENGTH, filePtr)))
-        {
-            printf("%d bytes written\n",n);
-            dumpData();
-        }
-        fclose(filePtr);
-
-        // checks if reading input from stdin is successful
-        if(ferror(stdin))
-        {
-            free(inputBuffer);
-            perror("\nread from stdin failed\n");
-            exit(3);
-        }
-        puts("\n[Data written successfully]\n");
-    }
-    else
-    {
-        puts("\nInvalid file...\n");
-        //getFileName;
-    }
+    puts("\n[ Data written successfully ]\n");
 }
 
 /*
@@ -125,11 +89,26 @@ void getInputType()
     scanf(" %c", &inputChoice);
 
     if(inputChoice == '1' )
-        getFileInput();
+    {
+        flushOutputFile();
+        char *IfileName[255];
+        printf("\nProvide a valid fileName : ");
+        scanf("%s",IfileName);
+        if( access( IfileName, F_OK ) != -1 )
+        {
+            FILE *filePtr = fopen(IfileName, "rb");
+            getArbitraryDataAndStore(filePtr);
+        }
+        else
+            puts("\nInvalid file...\n");
+    }
     else if(inputChoice == '0')
         exit(0);
     else
-        getArbitraryDataAndStore();
+    {
+        puts("Give your console input : ");
+        getArbitraryDataAndStore(stdin);
+    }
 }
 
 int main(){
